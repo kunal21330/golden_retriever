@@ -13,7 +13,7 @@ df = pd.read_csv(csv_file)
 
 for index, row in df.iterrows():
     text_id = row['id']
-    text_content = row['Review Text']  # Assuming 'Review Text' contains the text content directly
+    text_content = row['Review Text']  
     text_path = os.path.join(text_folder, f'{text_id}.txt')
     try:
         # Write text content to a .txt file
