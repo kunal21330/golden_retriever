@@ -1,55 +1,54 @@
 import numpy as np
 import os
 from sklearn.metrics.pairwise import cosine_similarity
-import pickle
 
-# Function to load normalized image features
-def load_normalized_image_features(features_directory):
+def load_normalized_features(normalized_features_dir):
+    """Load normalized features for all images from the specified directory."""
     features = {}
-    files=os.listdir(features_directory)
-    for file in files:
-        if file.endswith('_normalized.npy'):
-            image_id = file.replace('_normalized.npy', '')
-            feature_path = os.path.join(features_directory, file)
-            features[image_id] = np.load(feature_path)
+    for feature_file in os.listdir(normalized_features_dir):
+        if feature_file.endswith('.npy'):
+            # Image ID is derived from the filename by removing '_normalized.npy'
+            image_id = os.path.splitext(feature_file)[0].replace('_normalized', '')
+            features_path = os.path.join(normalized_features_dir, feature_file)
+            features[image_id] = np.load(features_path)
     return features
 
-# Load your normalized image features (adjust the directory as needed)
-features_directory = 'Q1\\normalized_features'
-image_features = load_normalized_image_features(features_directory)
-
-
-
-
-def retrieve_similar_images(input_image_id, image_features, top_n=3):
-    if input_image_id not in image_features:
-        print("Input image ID not found in the dataset.")
+def find_top_similar_images(image_id, features, top_k=3):
+    """Find and return the top K similar images for the given image ID."""
+    if image_id not in features:
+        print(f"Features for image ID {image_id} are not found.")
         return []
     
-    input_features = image_features[input_image_id]
-    input_features = input_features.reshape(1, -1)  # Reshape for compatibility with sklearn's function
-    all_features_matrix = np.array(list(image_features.values()))
-    similarity_scores = cosine_similarity(input_features, all_features_matrix)
+    # Reshape the feature vector of the given image for cosine similarity computation
+    given_image_features = features[image_id].reshape(1, -1)
     
-    # Get sorted indices based on similarity scores, excluding the first one (highest score) as it's the input image
-    sorted_indices = np.argsort(similarity_scores)[::-1][1:top_n+1]
+    # Exclude the given image's features from the comparison set
+    other_images = {id_: feat for id_, feat in features.items() if id_ != image_id}
+    other_features = np.array(list(other_images.values()))
+    other_ids = list(other_images.keys())
     
-    # Retrieve the image IDs and their scores for the top matches
-    similar_images = [(list(image_features.keys())[index], similarity_scores[index]) for index in sorted_indices]
+    # Compute the cosine similarity between the given image and all others
+    similarity_scores = cosine_similarity(given_image_features, other_features)[0]
     
-    return similar_images
-# Print out the available image IDs
-# print(list(image_features.keys()))
+    # Identify the indices of the top K similarity scores
+    top_indices = np.argsort(similarity_scores)[-top_k:][::-1]
+    
+    # Retrieve the top K similar image IDs and their similarity scores
+    top_similar_images = [(other_ids[index], similarity_scores[index]) for index in top_indices]
+    
+    return top_similar_images
 
-# Example usage (ensure you replace 'your_input_image_id_here' with an actual image ID from your dataset)
-input_image_id = input("enter image id: ")
-similar_images = retrieve_similar_images(input_image_id, image_features, top_n=3)
+# Path to the directory containing the normalized feature files
+normalized_features_dir = 'Q1/normalized_features'
 
-# Display or save the results
-print("Top 3 similar images:")
-for image_id, score in similar_images:
-    print(f"Image ID: {image_id}, Similarity Score: {score}")
+# Load the normalized features from the specified directory
+features = load_normalized_features(normalized_features_dir)
 
-# # Optionally, save results with pickle
-# with open('image_retrieval_results.pkl', 'wb') as f:
-#     pickle.dump(similar_images, f)
+# The image ID for which you want to find similar images
+image_id = input("enter image id: ")  # The '.jpg' is omitted because the feature files are named without the file extension
+
+# Retrieve the top 3 similar images and their similarity scores
+top_similar_images = find_top_similar_images(image_id, features, top_k=3)
+print("Top 3 similar images and their similarity scores:")
+for img_id, score in top_similar_images:
+    print(f"Image ID: {img_id}, Similarity Score: {score}")
