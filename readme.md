@@ -257,3 +257,230 @@ then i merged all codes in 1 to save time and storage
                 print(f"Error processing features {file}: {e}")
             
         
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+for Q3 too i have first made different codes for part a and b then merged them 
+
+# part a image retrieval
+
+import numpy as np
+import os
+from sklearn.metrics.pairwise import cosine_similarity
+
+def load_normalized_features(normalized_features_dir):
+    """Load normalized features for all images from the specified directory."""
+    features = {}
+    for feature_file in os.listdir(normalized_features_dir):
+        if feature_file.endswith('.npy'):
+            # Image ID is derived from the filename by removing '_normalized.npy'
+            image_id = os.path.splitext(feature_file)[0].replace('_normalized', '')
+            features_path = os.path.join(normalized_features_dir, feature_file)
+            features[image_id] = np.load(features_path)
+    return features
+
+def reviews(reviews_dir):
+    """Load reviews for all images from the specified directory."""
+    reviews = {}
+    for review_file in os.listdir(reviews_dir):
+        if review_file.endswith('.txt'):
+            # Extract image ID from the filename
+            image_id = os.path.splitext(review_file)[0]
+            review_path = os.path.join(reviews_dir, review_file)
+            with open(review_path, 'r') as file:
+                reviews[image_id] = file.read().strip()
+    return reviews
+
+
+def find_top_similar_images(image_id, features, top_k=3):
+    """Find and return the top K similar images for the given image ID."""
+    if image_id not in features:
+        print(f"Features for image ID {image_id} are not found.")
+        return []
+    
+    # Reshape the feature vector of the given image for cosine similarity computation
+    given_image_features = features[image_id].reshape(1, -1)
+    
+    # Exclude the given image's features from the comparison set
+    other_images = {id_: feat for id_, feat in features.items() if id_ != image_id}
+    other_features = np.array(list(other_images.values()))
+    other_ids = list(other_images.keys())
+    
+    # Compute the cosine similarity between the given image and all others
+    similarity_scores = cosine_similarity(given_image_features, other_features)[0]
+    
+    # Identify the indices of the top K similarity scores
+    top_indices = np.argsort(similarity_scores)[-top_k:][::-1]
+    
+    # Retrieve the top K similar image IDs and their similarity scores
+    top_similar_images = [(other_ids[index], similarity_scores[index]) for index in top_indices]
+    
+    return top_similar_images
+
+#Path to the directory containing the normalized feature files
+normalized_features_dir = 'Q1/normalized_features'
+
+#Load the normalized features from the specified directory
+features = load_normalized_features(normalized_features_dir)
+
+#The image ID for which you want to find similar images
+image_id = input("enter image id: ")  # The '.jpg' is omitted because the feature files are named without the file extension
+
+#Path to the directory containing the reviews
+reviews_dir = 'Q2/text_files'
+
+review_id = input("review: ")
+
+
+#Retrieve the top 3 similar images and their similarity scores
+top_similar_images = find_top_similar_images(image_id, features, top_k=3)
+print("Top 3 similar images and their similarity scores:")
+for img_id, score in top_similar_images:
+    print(f"Image ID: {img_id}, Similarity Score: {score}")
+    review_id = img_id.split('_')[0]  # Extracting the review ID from the image ID
+    if review_id in reviews:
+        print("Review:")
+        print(reviews[review_id])
+    else:
+        print("Review not available.")
+
+
+# part b text retrieval
+
+import os
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import pickle
+
+preprocessed_dir = 'Q2/preprocessed_text_files' 
+
+#Load preprocessed texts and their IDs
+preprocessed_texts = []
+ids = []
+for filename in os.listdir(preprocessed_dir):
+    if filename.startswith('preprocessed_'):
+        with open(os.path.join(preprocessed_dir, filename), 'r', encoding='utf-8') as file:
+            preprocessed_texts.append(file.read())
+            ids.append(filename.replace('preprocessed_', '').replace('.txt', ''))
+#initialize TF-IDF Vectorizer and compute TF-IDF matrix
+vectorizer = TfidfVectorizer()
+tfidf_matrix = vectorizer.fit_transform(preprocessed_texts)
+def find_similar_reviews(input_id, ids, tfidf_matrix, top_k=3):
+    if input_id not in ids:
+        print(f"Review ID {input_id} not found.")
+        return []
+    
+    input_index = ids.index(input_id)
+    input_vector = tfidf_matrix[input_index]
+
+    # Compute cosine similarity scores between the input vector and all others
+    similarity_scores = cosine_similarity(input_vector, tfidf_matrix).flatten()
+
+    # Get indices of the top_k similar reviews, excluding the input review itself
+    top_indices = similarity_scores.argsort()[-top_k-1:-1][::-1]  # Exclude the last one (itself)
+
+    # Map indices back to IDs
+    similar_reviews = [(ids[i], similarity_scores[i]) for i in top_indices]
+    
+    return similar_reviews
+
+input_id = input("Enter review ID: ")  
+similar_reviews = find_similar_reviews(input_id, ids, tfidf_matrix, top_k=3)
+
+print("Similar reviews:")
+for review_id, score in similar_reviews:
+    print(f"Review ID: {review_id}, Similarity Score: {score}")
+
+
+results = {'image_similarity': top_similar_images, 'review_similarity': similar_reviews}
+with open('results.pkl', 'wb') as f:
+    pickle.dump(results, f)
+
+print("Results saved in 'results.pkl' file.")
+
+
+# merged 
+
+import os
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pickle
+
+#First Part: Image Similarity
+
+def load_normalized_features(normalized_features_dir):
+    features = {}
+    for feature_file in os.listdir(normalized_features_dir):
+        if feature_file.endswith('.npy'):
+            image_id = os.path.splitext(feature_file)[0].replace('_normalized', '')
+            features_path = os.path.join(normalized_features_dir, feature_file)
+            features[image_id] = np.load(features_path)
+    return features
+
+def find_top_similar_images(image_id, features, top_k=3):
+    if image_id not in features:
+        print(f"Features for image ID {image_id} are not found.")
+        return []
+    
+    given_image_features = features[image_id].reshape(1, -1)
+    other_images = {id_: feat for id_, feat in features.items() if id_ != image_id}
+    other_features = np.array(list(other_images.values()))
+    other_ids = list(other_images.keys())
+    
+    similarity_scores = cosine_similarity(given_image_features, other_features)[0]
+    top_indices = np.argsort(similarity_scores)[-top_k:][::-1]
+    top_similar_images = [(other_ids[index], similarity_scores[index]) for index in top_indices]
+    
+    return top_similar_images
+
+#Adjust these paths according to your directory structure
+normalized_features_dir = 'Q1/normalized_features'
+features = load_normalized_features(normalized_features_dir)
+image_id = input("enter image id: ")
+top_similar_images = find_top_similar_images(image_id, features)
+
+#Second Part: Review Similarity
+
+preprocessed_dir = 'Q2/preprocessed_text_files'
+preprocessed_texts = []
+ids = []
+for filename in os.listdir(preprocessed_dir):
+    if filename.startswith('preprocessed_'):
+        with open(os.path.join(preprocessed_dir, filename), 'r', encoding='utf-8') as file:
+            preprocessed_texts.append(file.read())
+            ids.append(filename.replace('preprocessed_', '').replace('.txt', ''))
+
+vectorizer = TfidfVectorizer()
+tfidf_matrix = vectorizer.fit_transform(preprocessed_texts)
+
+def find_similar_reviews(input_id, ids, tfidf_matrix, top_k=3):
+    if input_id not in ids:
+        print(f"Review ID {input_id} not found.")
+        return []
+    
+    input_index = ids.index(input_id)
+    input_vector = tfidf_matrix[input_index]
+    similarity_scores = cosine_similarity(input_vector, tfidf_matrix).flatten()
+
+    top_indices = similarity_scores.argsort()[-top_k-1:-1][::-1]
+    similar_reviews = [(ids[i], similarity_scores[i]) for i in top_indices]
+    
+    return similar_reviews
+
+input_id = input("Enter review ID: ")
+similar_reviews = find_similar_reviews(input_id, ids, tfidf_matrix)
+
+#Saving Results
+
+results = {
+    'image_similarity': top_similar_images,
+    'review_similarity': similar_reviews
+}
+
+print(results)
+with open('Q3/results.pkl', 'wb') as f:
+    pickle.dump(results, f)
+
+print("Results saved in 'results.pkl' file.")
