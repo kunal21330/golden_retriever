@@ -1,3 +1,130 @@
+# Multimodal Retrieval System for Images and Text
+
+## CSE508 Information Retrieval - Winter 2024
+
+### Assignment 2
+
+**Due Date:** Mar 6, 2024  
+**Max Marks:** 100
+
+### Table of Contents
+1. [Introduction](#introduction)
+2. [Requirements](#requirements)
+3. [Dataset](#dataset)
+4. [Task Breakdown](#task-breakdown)
+5. [Setup and Installation](#setup-and-installation)
+6. [Code Structure](#code-structure)
+7. [Usage](#usage)
+8. [Results and Analysis](#results-and-analysis)
+9. [Challenges and Future Work](#challenges-and-future-work)
+
+### Introduction
+This project implements a multimodal retrieval system that uses both images and text as input data for information retrieval tasks. The system fetches images and their corresponding textual reviews from a dataset and applies various feature extraction techniques to enable similarity-based retrieval for both modalities.
+
+### Requirements
+- Python 3.8+
+- Libraries: `numpy`, `pandas`, `opencv-python`, `tensorflow`, `scikit-learn`, `pickle`, `requests`
+
+### Dataset
+The dataset consists of links to images and corresponding text reviews for a given Product ID. The images are fetched from the provided URLs and processed according to the assignment requirements.
+
+### Task Breakdown
+The project is divided into the following tasks:
+
+1. **Image Feature Extraction (25 Marks)**
+   - Image preprocessing techniques such as altering contrast, resizing, and normalizing.
+   - Feature extraction using pre-trained CNN models like ResNet, VGG16, Inception-v3, or MobileNet.
+   - Normalization of extracted features.
+
+2. **Text Feature Extraction (25 Marks)**
+   - Text preprocessing techniques including lower-casing, tokenization, stop word removal, stemming, and lemmatization.
+   - Calculation of TF-IDF scores for textual reviews.
+
+3. **Image and Text Retrieval (25 Marks)**
+   - Retrieval of the top 3 most similar images based on extracted image features using cosine similarity.
+   - Retrieval of the top 3 most similar reviews based on TF-IDF scores using cosine similarity.
+
+4. **Combined Retrieval (Text and Image)**
+   - Calculation of a composite similarity score for image and text pairs.
+   - Ranking of pairs based on the composite similarity score.
+
+5. **Results and Analysis**
+   - Presentation of top-ranked (image, review) pairs along with cosine similarity scores.
+   - Analysis of retrieval techniques and discussion on potential improvements.
+
+### Setup and Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kunal21330/golden_retriever.git
+   cd golden_retriever
+   ```
+
+2. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Code Structure
+
+* `Q1/`: Image Downloading and Preprocessing
+* `Q2/`: Text Preprocessing and Feature Extraction
+* `Q3/`: Image and Text Retrieval
+* `Q4/`: Combined Retrieval and Ranking
+* `A2_Data.csv`: Input dataset for image URLs and text reviews.
+* `Q5.pdf`: Detailed report on methodologies, assumptions, and results.
+* `readme.md`: This README file.
+
+### Usage
+
+**Image Downloading and Preprocessing**
+
+Run the `Q1` folder scripts to download and preprocess the images:
+
+```bash
+python Q1/download_images.py
+python Q1/preprocess_images.py
+```
+
+**Feature Extraction**
+
+Execute scripts to extract image and text features:
+
+```bash
+python Q2/extract_image_features.py
+python Q2/extract_text_features.py
+```
+
+**Image and Text Retrieval**
+
+Run retrieval scripts to find the most similar images and text:
+
+```bash
+python Q3/retrieve_images.py
+python Q3/retrieve_texts.py
+```
+
+**Combined Retrieval**
+
+Perform combined retrieval and ranking:
+
+```bash
+python Q4/combined_retrieval.py
+```
+
+### Results and Analysis
+
+The top-ranked image and text pairs, along with their cosine similarity scores, are saved in `results.pkl`. Results are presented for both image-based and text-based retrieval approaches.
+
+### Challenges and Future Work
+
+* **Challenges:** Efficient handling of large datasets, optimizing the retrieval speed, and improving accuracy.
+* **Future Work:** Explore advanced deep learning models, incorporate semantic understanding for text, and enhance retrieval algorithms.
+
+Please refer to `Q5.pdf` for a detailed report on the methodologies, assumptions, and results obtained for each problem in the assignment.
+
+
+
 Q1:
 first i tried to make 4 different codes and 4 different folder for 
 # downloading image
